@@ -4,6 +4,7 @@ from scikit import transform
 from PIL import Image
 import os
 import random
+import numpy as np
 
 def warp_image(image, keypoints, warp_strength=0.1):
  
