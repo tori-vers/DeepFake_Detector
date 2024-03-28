@@ -40,7 +40,7 @@ val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 # Custom data augmentation layer (to prevent overfitting)
 data_augmentation = tf.keras.Sequential(
     [
-        layers.RandomFlip("horizontal", input_shape=(img_height, img_width, 3)),
+        layers.RandomFlip("horizontal"),
         layers.RandomContrast(0.2),
         layers.RandomBrightness(0.2),
         layers.RandomRotation(0.2),
@@ -51,6 +51,7 @@ data_augmentation = tf.keras.Sequential(
 # Classifier model construction
 model = Sequential(
 [
+    tf.keras.Input(shape=(img_height, img_width, 3)),
     data_augmentation,
     layers.Rescaling(1./255),
     layers.Conv2D(16, 3, padding='same', activation='relu'),
@@ -90,4 +91,4 @@ history = model.fit(
 )
 
 # Save model configuration
-model.save('DeepfakeDetector.keras')
+model.save('DeepfakeDetectorTest.keras')

@@ -50,4 +50,4 @@ test_ds = keras.utils.image_dataset_from_directory(data_dir+'\\test',
                                                    image_size=(img_height,img_width))
 
 # Load a presaved model (change as needed)
-model = tf.keras.models.load_model('DeepfakeDetectorTest')
+model = tf.keras.models.load_model('DeepfakeDetectorTest.keras')
