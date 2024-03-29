@@ -6,7 +6,7 @@
 
     Notes:
         model.predict(test_dataset) will give the actual predictions for each image
-        model.evaluate(test_dataset) returns metrics for the whole dataset (i.e., the
+        model.evaluate(test_dataset, verbose=0) returns metrics for the whole dataset (i.e., the
             accuracy, loss, and AUC score)
 
         The predictions returned with model.predict are technically float values between 0 and 1. For
@@ -30,15 +30,15 @@ import pandas as pd
 import keras 
 import numpy as np
 
-img_height = 300
-img_width = 300
+img_height = 256
+img_width = 256
 batch_size = 32
 
 # Path to image archive (replace as needed)
-data_dir = os.path.join('ImageArchive')
+data_dir = os.path.join('ImageArchive2')
 
 # Process for loading test labels (true classes, as opposed to what the model will predict)
-test_data = pd.read_csv('ImageArchive\\test\\y_labels.csv')
+test_data = pd.read_csv(data_dir+'\\y_labels.csv')
 labels = test_data.pop('labels')
 
 # Get a list of the test labels
@@ -47,7 +47,9 @@ test_labels = labels.to_list()
 # Create test dataset
 test_ds = keras.utils.image_dataset_from_directory(data_dir+'\\test',
                                                    labels=test_labels,
-                                                   image_size=(img_height,img_width))
+                                                   image_size=(img_height,img_width),
+                                                   batch_size=batch_size,
+                                                   shuffle=False)
 
 # Load a presaved model (change as needed)
-model = tf.keras.models.load_model('DeepfakeDetectorTest.keras')
+model = tf.keras.models.load_model('DeepfakeDetector3.keras')
