@@ -29,7 +29,7 @@ import tensorflow as tf
 import pandas as pd
 import keras 
 import numpy as np
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
+from sklearn.metrics import accuracy_score, roc_auc_score, log_loss, ConfusionMatrixDisplay
 
 img_height = 256
 img_width = 256
@@ -52,19 +52,6 @@ test_ds = keras.utils.image_dataset_from_directory(data_dir+'\\test',
                                                    batch_size=batch_size,
                                                    shuffle=False)
 
-# Extract Test Features and Labels from the Test dataset
-X_test = []
-y_test = []
-
-for batch in test_ds:
-    features, labels = batch
-    X_test.append(features.numpy()) 
-    y_test.append(labels.numpy())
-
-X_test = np.concatenate(X_test, axis=0)
-y_test = np.concatenate(y_test, axis=0)  
-
-
 # Load a presaved model (change as needed)
 model_1 = tf.keras.models.load_model(r'DeepFake_Detector\DeepfakeDetector1.keras')
 model_3 = tf.keras.models.load_model(r'DeepFake_Detector\DeepfakeDetector3.keras')
@@ -73,7 +60,10 @@ model_15 = tf.keras.models.load_model(r'DeepFake_Detector\DeepfakeDetector15.ker
 model_30 = tf.keras.models.load_model(r'DeepFake_Detector\DeepfakeDetector30.keras')
 
 models = [model_1, model_3, model_7, model_15, model_30]
-model_names = ['model_1', 'model_3', 'model_7', 'model_15', 'model_30']
+model_names = ['Model 1', 'Model 2', 'Model 3', 'Model 4', 'Model 5']
+accuracy_scores = []
+auc_scores = []
+loss_scores = []
 
 # Go through list of models and prints metrics (Accuracy, AUC score, & confusion matrix) for each
 for model, name in zip(models, model_names):
@@ -95,35 +85,46 @@ for model, name in zip(models, model_names):
     scores = bool_scores.astype(int)
 
     # Visualizer for the confusion matrix 
-    num_classes = len(np.unique(test_labels))
-    cm = confusion_matrix(test_labels, scores)
-    print("Confusion matrix for model {}: \n{}".format(name, cm))
-    
-    plt.figure(figsize=(8, 6))
-    plt.imshow(cm, interpolation='nearest', cmap='Blues')
-    plt.xticks(np.arange(0, num_classes, 1))
-    plt.yticks(np.arange(0, num_classes, 1))
+    ConfusionMatrixDisplay.from_predictions(test_labels, scores, 
+                                        display_labels=np.unique(test_labels), 
+                                        cmap='Blues', normalize=None)
 
-    plt.title('Confusion Matrix for Model {}'.format(name))
-    plt.colorbar()
+    plt.title('Confusion Matrix for {}'.format(name))
     plt.xlabel('Predicted labels')
     plt.ylabel('True labels')
     plt.show()
     
-    # Calculate Accuracy 
-    accuracy = accuracy_score(test_labels, scores)
-    
-    # Calculate AUC score
-    auc = roc_auc_score(test_labels, y_pred)
+    # Calculate Accuracy, AUC, Loss and puts metrics into specified arrays
+    accuracy_scores.append(accuracy_score(test_labels, scores))
+    auc_scores.append(roc_auc_score(test_labels, y_pred))
+    loss_scores.append(log_loss(test_labels, y_pred))
 
-    # Calculate Loss score
-    # Not actually sure if this is done correctly. It produces three values in an array and I don't know if that should be the outcome.
-    # loss = model.evaluate(X_test, y_test)
+# Print the scores in an array
+print(f"Classifier Model Performance Metrics:")
+print(f"Accuracy: {accuracy_scores}")
+print(f"AUC: {auc_scores}")
+print(f"Loss: {loss_scores}\n")
 
-    # Print the scores
-    print(f"Results for {name}:")
-    print(f"Accuracy: {accuracy}")
-    print(f"AUC: {auc}\n")
-    # print(f"Loss: {loss}\n")
+# Plotting
+plt.figure(figsize=(10, 7))
 
+offset = 0.01
+
+# Plot all metrics in a graph
+plt.plot(model_names, accuracy_scores, marker='o', linestyle='-', label='Accuracy', color='blue')
+plt.plot(model_names, auc_scores, marker='o', linestyle='-', label='AUC', color='green')
+plt.plot(model_names, loss_scores, marker='o', linestyle='-', label='Loss', color='red')
+
+for i, (x, y1, y2, y3) in enumerate(zip(model_names, accuracy_scores, auc_scores, loss_scores)):
+    plt.text(i, y1+offset, f'{y1:.5f}', ha='center', va='bottom', color='blue')
+    plt.text(i, y2+offset, f'{y2:.5f}', ha='center', va='bottom', color='green')
+    plt.text(i, y3+offset, f'{y3:.5f}', ha='center', va='bottom', color='red')
+
+plt.xlabel('Model Number')
+plt.title('Model Performance')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+
+plt.show()
 
